@@ -1,9 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        sonarRunner 'sonar-scanner'
-    }
 
     environment {
         IMAGE_NAME = "billa1108/enterprise-devsecops:v1"
