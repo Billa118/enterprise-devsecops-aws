@@ -1,29 +1,39 @@
 pipeline {
     agent any
 
+    tools {
+        sonarQube 'sonar-scanner'
+    }
+
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Repository cloned successfully!'
+                checkout scm
             }
         }
 
-        stage('Build') {
+        stage('SonarQube Analysis') {
             steps {
-                echo 'Starting build...'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
+                withSonarQubeEnv('sonarqube') {
+                    sh """
+                    ${SCANNER_HOME}/bin/sonar-scanner \
+                    -Dsonar.projectKey=enterprise-devsecops-aws \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://13.203.219.97:9000
+                    """
+                }
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline Finished!'
+            echo 'Pipeline Finished'
         }
     }
 }
