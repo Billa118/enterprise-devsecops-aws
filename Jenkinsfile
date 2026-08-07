@@ -14,18 +14,21 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                    ${tool 'sonar-scanner'}/bin/sonar-scanner \
-                      -Dsonar.projectKey=enterprise-devsecops-aws \
-                      -Dsonar.sources=. \
-                      -Dsonar.host.url=http://13.203.219.97:9000
-                    '''
-                }
+      stage('SonarQube Analysis') {
+    steps {
+        script {
+            def scannerHome = tool 'sonar-scanner'
+            withSonarQubeEnv('sonarqube') {
+                sh """
+                ${scannerHome}/bin/sonar-scanner \
+                -Dsonar.projectKey=enterprise-devsecops-aws \
+                -Dsonar.sources=. \
+                -Dsonar.host.url=${env.SONAR_HOST_URL}
+                """
             }
         }
+    }
+}
 
         stage('Build Docker Image') {
             steps {
