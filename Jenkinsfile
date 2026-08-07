@@ -1,7 +1,6 @@
 pipeline {
     agent any
 
-
     environment {
         IMAGE_NAME = "billa1108/enterprise-devsecops:v1"
     }
@@ -14,21 +13,21 @@ pipeline {
             }
         }
 
-      stage('SonarQube Analysis') {
-    steps {
-        script {
-            def scannerHome = tool 'sonar-scanner'
-            withSonarQubeEnv('sonarqube') {
-                sh """
-                ${scannerHome}/bin/sonar-scanner \
-                -Dsonar.projectKey=enterprise-devsecops-aws \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=${env.SONAR_HOST_URL}
-                """
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-scanner'
+                    withSonarQubeEnv('sonarqube') {
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=enterprise-devsecops-aws \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=${env.SONAR_HOST_URL}
+                        """
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Build Docker Image') {
             steps {
@@ -51,7 +50,6 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-
                     sh '''
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     docker tag enterprise-devsecops:v1 $IMAGE_NAME
@@ -59,6 +57,17 @@ pipeline {
                     docker logout
                     '''
                 }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                kubectl set image deployment/enterprise-app \
+                enterprise-app=billa1108/enterprise-devsecops:v1
+
+                kubectl rollout status deployment/enterprise-app
+                '''
             }
         }
     }
