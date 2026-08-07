@@ -13,21 +13,21 @@ pipeline {
             }
         }
 
-       stage('SonarQube Analysis') {
-    steps {
-        script {
-            def scannerHome = tool 'sonar-scanner'
-            withSonarQubeEnv('sonarqube') {
-                sh """
-                ${scannerHome}/bin/sonar-scanner \
-                -Dsonar.projectKey=enterprise-devsecops-aws \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=http://localhost:9000
-                """
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-scanner'
+                    withSonarQubeEnv('sonarqube') {
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=enterprise-devsecops-aws \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://localhost:9000
+                        """
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Build Docker Image') {
             steps {
@@ -64,7 +64,7 @@ pipeline {
             steps {
                 sh '''
                 kubectl set image deployment/enterprise-app \
-                enterprise-app=billa1108/enterprise-devsecops:v1
+                enterprise-devsecops=billa1108/enterprise-devsecops:v1
 
                 kubectl rollout status deployment/enterprise-app
                 '''
