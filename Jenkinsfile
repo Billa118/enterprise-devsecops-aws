@@ -5,10 +5,6 @@ pipeline {
         IMAGE_NAME = "billa1108/enterprise-devsecops:v1"
     }
 
-    tools {
-        sonarRunner 'sonar-scanner'
-    }
-
     stages {
 
         stage('Checkout') {
@@ -19,15 +15,6 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-<<<<<<< HEAD
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=enterprise-devsecops-aws \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://localhost:9000
-                    '''
-=======
                 script {
                     def scannerHome = tool 'sonar-scanner'
 
@@ -39,7 +26,6 @@ pipeline {
                             -Dsonar.host.url=http://localhost:9000
                         """
                     }
->>>>>>> 5d2868e (Fix SonarQube and Helm deployment pipeline)
                 }
             }
         }
@@ -69,18 +55,11 @@ pipeline {
                 ]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login \
-<<<<<<< HEAD
                         -u "$DOCKER_USER" \
                         --password-stdin
-=======
-                            -u "$DOCKER_USER" \
-                            --password-stdin
->>>>>>> 5d2868e (Fix SonarQube and Helm deployment pipeline)
 
                         docker tag enterprise-devsecops:v1 $IMAGE_NAME
-
                         docker push $IMAGE_NAME
-
                         docker logout
                     '''
                 }
