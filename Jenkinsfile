@@ -19,6 +19,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
+<<<<<<< HEAD
                 withSonarQubeEnv('sonarqube') {
                     sh '''
                         sonar-scanner \
@@ -26,6 +27,19 @@ pipeline {
                         -Dsonar.sources=. \
                         -Dsonar.host.url=http://localhost:9000
                     '''
+=======
+                script {
+                    def scannerHome = tool 'sonar-scanner'
+
+                    withSonarQubeEnv('sonarqube') {
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=enterprise-devsecops-aws \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=http://localhost:9000
+                        """
+                    }
+>>>>>>> 5d2868e (Fix SonarQube and Helm deployment pipeline)
                 }
             }
         }
@@ -55,8 +69,13 @@ pipeline {
                 ]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login \
+<<<<<<< HEAD
                         -u "$DOCKER_USER" \
                         --password-stdin
+=======
+                            -u "$DOCKER_USER" \
+                            --password-stdin
+>>>>>>> 5d2868e (Fix SonarQube and Helm deployment pipeline)
 
                         docker tag enterprise-devsecops:v1 $IMAGE_NAME
 
