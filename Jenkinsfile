@@ -5,6 +5,10 @@ pipeline {
         IMAGE_NAME = "billa1108/enterprise-devsecops:v1"
     }
 
+    tools {
+        sonarRunner 'sonar-scanner'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -15,16 +19,13 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    def scannerHome = tool 'sonar-scanner'
-                    withSonarQubeEnv('sonarqube') {
-                        sh """
-                        ${scannerHome}/bin/sonar-scanner \
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                        sonar-scanner \
                         -Dsonar.projectKey=enterprise-devsecops-aws \
                         -Dsonar.sources=. \
                         -Dsonar.host.url=http://localhost:9000
-                        """
-                    }
+                    '''
                 }
             }
         }
@@ -45,28 +46,43 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker tag enterprise-devsecops:v1 $IMAGE_NAME
-                    docker push $IMAGE_NAME
-                    docker logout
+                        echo "$DOCKER_PASS" | docker login \
+                        -u "$DOCKER_USER" \
+                        --password-stdin
+
+                        docker tag enterprise-devsecops:v1 $IMAGE_NAME
+
+                        docker push $IMAGE_NAME
+
+                        docker logout
                     '''
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy with Helm') {
             steps {
                 sh '''
-                kubectl set image deployment/enterprise-app \
-                enterprise-devsecops=billa1108/enterprise-devsecops:v1
+                    helm upgrade --install enterprise-app ./enterprise-chart
+                '''
+            }
+        }
 
-                kubectl rollout status deployment/enterprise-app
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                    kubectl rollout status deployment/enterprise-app-enterprise-chart
+                    kubectl get pods
+                    kubectl get svc
+                    helm list
                 '''
             }
         }
