@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "billa1108/enterprise-devsecops:v1"
+        IMAGE_REPO = "billa1108/enterprise-devsecops"
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -40,10 +41,15 @@ pipeline {
 
         stage('Trivy Scan') {
             steps {
-                sh 'trivy image enterprise-devsecops:v1'
+                sh '''
+                    trivy image \
+                    --severity HIGH,CRITICAL \
+                    --exit-code 1 \
+                    enterprise-devsecops:v1
+                '''
             }
         }
-
+      
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([
@@ -58,8 +64,8 @@ pipeline {
                         -u "$DOCKER_USER" \
                         --password-stdin
 
-                        docker tag enterprise-devsecops:v1 $IMAGE_NAME
-                        docker push $IMAGE_NAME
+                        docker tag enterprise-devsecops:v1 $IMAGE_REPO:$IMAGE_TAG
+                        docker push $IMAGE_REPO:$IMAGE_TAG
                         docker logout
                     '''
                 }
@@ -69,7 +75,9 @@ pipeline {
         stage('Deploy with Helm') {
             steps {
                 sh '''
-                    helm upgrade --install enterprise-app ./enterprise-chart
+                    helm upgrade --install enterprise-app ./enterprise-chart \
+                    --set image.repository=$IMAGE_REPO \
+                    --set image.tag=$IMAGE_TAG
                 '''
             }
         }
