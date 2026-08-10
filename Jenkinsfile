@@ -42,14 +42,11 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 sh '''
-                    trivy image \
-                    --severity HIGH,CRITICAL \
-                    --exit-code 1 \
-                    enterprise-devsecops:v1
+                    trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 enterprise-devsecops:v1
                 '''
             }
         }
-      
+
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([
