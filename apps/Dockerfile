@@ -1,15 +1,18 @@
-FROM python:3.11-slim-bookworm
+FROM python:3.11-slim-trixie AS builder
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+FROM python:3.11-slim-trixie
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+RUN rm -rf /usr/local/lib/python3.11/site-packages/pip /usr/local/lib/python3.11/site-packages/pip-*.dist-info /usr/local/lib/python3.11/site-packages/setuptools /usr/local/lib/python3.11/site-packages/setuptools-*.dist-info /usr/local/lib/python3.11/site-packages/wheel /usr/local/lib/python3.11/site-packages/wheel-*.dist-info /usr/local/lib/python3.11/site-packages/_distutils_hack /usr/local/lib/python3.11/site-packages/pkg_resources
 
 COPY . .
 
