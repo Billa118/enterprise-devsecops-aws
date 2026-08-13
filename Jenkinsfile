@@ -23,8 +23,9 @@ pipeline {
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=enterprise-devsecops-aws \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://localhost:9000
+                            -Dsonar.sources=apps \
+                            -Dsonar.host.url=http://localhost:9000 \
+                            -Dsonar.python.version=3.11
                         """
                     }
                 }
@@ -42,7 +43,11 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 sh '''
-                    trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 enterprise-devsecops:v1
+                    trivy image \
+                    --severity HIGH,CRITICAL \
+                    --ignore-unfixed \
+                    --exit-code 1 \
+                    enterprise-devsecops:v1
                 '''
             }
         }
